@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>短期記憶容量測定（逆唱版）</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background-color: #f4f4f9; }
+        .container { text-align: center; background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 90%; max-width: 400px; }
+        h1 { color: #333; }
+        #display, #result { font-size: 2rem; font-weight: bold; margin: 1rem 0; height: 4rem; display: flex; align-items: center; justify-content: center; white-space: pre-wrap; }
+        input { font-size: 1.5rem; width: 80%; padding: 0.5rem; text-align: center; }
+        button { margin-top: 1rem; padding: 0.5rem 1.5rem; font-size: 1rem; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 0.5rem; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="app">
+    <div id="start-screen">
+        <h1>短期記憶テスト（逆唱）</h1>
+        <p>提示された数字を、<strong>逆の順番</strong>で入力してください。</p>
+        <button onclick="startGame()">開始</button>
+    </div>
+
+    <div id="present-screen" class="hidden">
+        <p id="present-label">数字を記憶してください</p>
+        <div id="display">-</div>
+    </div>
+
+    <div id="input-screen" class="hidden">
+        <p>提示された順とは<strong>逆の順番</strong>で入力してください</p>
+        <input type="number" id="user-input" pattern="\d*" inputmode="numeric">
+        <br>
+        <button onclick="checkAnswer()">回答する</button>
+    </div>
+
+    <div id="result-screen" class="hidden">
+        <div id="result-message"></div>
+        <button onclick="location.reload()">トップへ</button>
+    </div>
+</div>
+
+<script>
+    let currentDigits = [];
+    let digitCount = 3; 
+    let currentIndex = 0;
+    const display = document.getElementById('display');
+
+    function startGame() {
+        document.getElementById('start-screen').classList.add('hidden');
+        nextTrial();
+    }
+
+    function nextTrial() {
+        document.getElementById('input-screen').classList.add('hidden');
+        document.getElementById('present-screen').classList.remove('hidden');
+        
+        currentDigits = Array.from({length: digitCount}, () => Math.floor(Math.random() * 10));
+        currentIndex = 0;
+        
+        showNextDigit();
+    }
+
+    function showNextDigit() {
+        if (currentIndex < currentDigits.length) {
+            display.innerText = currentDigits[currentIndex];
+            currentIndex++;
+            setTimeout(() => {
+                display.innerText = "";
+                setTimeout(showNextDigit, 200);
+            }, 1000);
+        } else {
+            showInput();
+        }
+    }
+
+    function showInput() {
+        document.getElementById('present-screen').classList.add('hidden');
+        document.getElementById('input-screen').classList.remove('hidden');
+        document.getElementById('user-input').value = "";
+        document.getElementById('user-input').focus();
+    }
+
+    function checkAnswer() {
+        const inputVal = document.getElementById('user-input').value;
+        // 逆順の回答を作成
+        const answerStr = [...currentDigits].reverse().join('');
+
+        if (inputVal === answerStr) {
+            digitCount++;
+            display.innerText = "正解！\n桁数が増えます。";
+            document.getElementById('present-screen').classList.remove('hidden');
+            document.getElementById('input-screen').classList.add('hidden');
+            document.getElementById('present-label').innerText = "";
+            
+            setTimeout(nextTrial, 2000);
+        } else {
+            document.getElementById('input-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('result-message').innerHTML = 
+                `<h2>不正解！</h2><p>正解は ${currentDigits.reverse().join('')} でした。<br>あなたの最高桁数は ${digitCount - 1} 桁</p>`;
+        }
+    }
+</script>
+</body>
+</html>
